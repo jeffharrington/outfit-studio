@@ -64,7 +64,6 @@ export async function generateOutfits(
 export interface Outfit {
   id: string;
   created_at: string;
-  name: string | null;
   notes: string | null;
   generation_constraints: unknown;
   items: ClothingItem[];
@@ -73,7 +72,6 @@ export interface Outfit {
 function toOutfit(row: {
   id: string;
   created_at: string;
-  name: string | null;
   notes: string | null;
   generation_constraints: unknown;
   outfit_items: { clothing_items: ClothingItem }[];
@@ -81,7 +79,6 @@ function toOutfit(row: {
   return {
     id: row.id,
     created_at: row.created_at,
-    name: row.name,
     notes: row.notes,
     generation_constraints: row.generation_constraints,
     items: row.outfit_items.map((oi) => oi.clothing_items),
@@ -90,15 +87,35 @@ function toOutfit(row: {
 
 const OUTFIT_SELECT = "*, outfit_items(clothing_items(*))";
 
-export async function listOutfits(): Promise<Outfit[]> {
+export interface ListOutfitsFilters {
+  /** 1-based page number. Defaults to 1. */
+  page?: number;
+  /** Defaults to 10. */
+  pageSize?: number;
+}
+
+export interface ListOutfitsResult {
+  outfits: Outfit[];
+  total: number;
+}
+
+export async function listOutfits(
+  filters: ListOutfitsFilters = {},
+): Promise<ListOutfitsResult> {
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 10;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from("outfits")
-    .select(OUTFIT_SELECT)
-    .order("created_at", { ascending: false });
+    .select(OUTFIT_SELECT, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) throw error;
-  return (data ?? []).map(toOutfit);
+  return { outfits: (data ?? []).map(toOutfit), total: count ?? 0 };
 }
 
 export async function getOutfit(id: string): Promise<Outfit | null> {
@@ -114,7 +131,6 @@ export async function getOutfit(id: string): Promise<Outfit | null> {
 }
 
 export interface SaveOutfitInput {
-  name?: string | null;
   notes?: string | null;
   constraints?: GenerationConstraints;
   itemIds: string[];
@@ -126,7 +142,7 @@ export async function saveOutfit(input: SaveOutfitInput): Promise<Outfit> {
   const { data: outfit, error: outfitError } = await admin
     .from("outfits")
     .insert({
-      name: input.name ?? null,
+      name: null,
       notes: input.notes ?? null,
       generation_constraints: input.constraints
         ? (JSON.parse(JSON.stringify(input.constraints)) as Json)
@@ -150,14 +166,6 @@ export async function saveOutfit(input: SaveOutfitInput): Promise<Outfit> {
   const saved = await getOutfit(outfit.id);
   if (!saved) throw new Error("Failed to load outfit after saving");
   return saved;
-}
-
-export async function renameOutfit(id: string, name: string): Promise<void> {
-  const admin = createAdminClient();
-  const { error } = await admin.from("outfits").update({ name }).eq("id", id);
-  if (error) throw error;
-  revalidatePath("/outfits");
-  revalidatePath(`/outfits/${id}`);
 }
 
 export async function deleteOutfit(id: string): Promise<void> {
