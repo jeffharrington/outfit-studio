@@ -44,3 +44,6 @@ next-env.d.ts
 # seed photos and their derived cache (personal photos, regenerable cache)
 /seed-images/
 /scripts/.seed-cache/
+
+# Claude Code runtime state (session-local, not shared config)
+/.claude/scheduled_tasks.lock
