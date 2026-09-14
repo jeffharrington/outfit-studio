@@ -4,6 +4,7 @@ import { listClothingItems } from "@/lib/actions/items";
 import { CLOTHING_CATEGORIES, type ClothingCategory } from "@/lib/outfit-generator/types";
 import { Button } from "@/components/ui/button";
 import { ItemCard } from "@/components/item-card";
+import { PaginationControls } from "@/components/pagination-controls";
 
 const PAGE_SIZE = 10;
 
@@ -62,15 +63,24 @@ export default async function ClosetPage(props: PageProps<"/closet">) {
         <Button render={<Link href="/closet/upload">Add item</Link>} />
       </div>
 
-      <div className="flex gap-2">
-        {FILTERS.map((filter) => (
-          <Button
-            key={filter.label}
-            variant={filter.category === category ? "default" : "outline"}
-            size="sm"
-            render={<Link href={buildHref(filter.category, 1)}>{filter.label}</Link>}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2">
+          {FILTERS.map((filter) => (
+            <Button
+              key={filter.label}
+              variant={filter.category === category ? "default" : "outline"}
+              size="sm"
+              render={<Link href={buildHref(filter.category, 1)}>{filter.label}</Link>}
+            />
+          ))}
+        </div>
+        {items.length > 0 && (
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            buildHref={(p) => buildHref(category, p)}
           />
-        ))}
+        )}
       </div>
 
       {items.length === 0 ? (
@@ -89,33 +99,11 @@ export default async function ClosetPage(props: PageProps<"/closet">) {
             ))}
           </ul>
 
-          <div className="flex items-center justify-between">
-            {page > 1 ? (
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link href={buildHref(category, page - 1)}>Previous</Link>}
-              />
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-            )}
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            {page < totalPages ? (
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link href={buildHref(category, page + 1)}>Next</Link>}
-              />
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Next
-              </Button>
-            )}
-          </div>
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            buildHref={(p) => buildHref(category, p)}
+          />
         </>
       )}
     </main>
