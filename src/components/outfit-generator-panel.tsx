@@ -73,6 +73,7 @@ export function OutfitGeneratorPanel({
         const results = await generateOutfits({
           constraints: toConstraints(values),
           limit: 10,
+          excludeItemIds: outfit.map((item) => item.id),
         });
         if (results.length === 0) {
           toast.error("No outfit could be generated with these settings.");

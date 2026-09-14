@@ -55,18 +55,31 @@ function outfitScore(
  * items in a category if none satisfy the constraints, so generation
  * degrades gracefully instead of returning nothing), then combinatorially
  * assembles one item per category and returns the best-scoring candidates.
+ *
+ * `excludeItemIds` (typically the currently displayed outfit) is used to
+ * steer each category away from repeating the same piece: since scoring is
+ * separable per item, whichever single item best matches the constraints
+ * would otherwise dominate every candidate and get picked call after call.
+ * An excluded item is only reused if it's the sole option left in its
+ * category once constraints are applied.
  */
 export function generateCandidates(
   items: ClothingItemInput[],
   constraints: GenerationConstraints,
   limit = 5,
+  excludeItemIds: string[] = [],
 ): GeneratedOutfit[] {
+  const excluded = new Set(excludeItemIds);
+
   const byCategory = CLOTHING_CATEGORIES.map((category) => {
     const inCategory = items.filter((item) => item.category === category);
     const matching = inCategory.filter((item) =>
       matchesConstraints(item, constraints),
     );
-    return matching.length > 0 ? matching : inCategory;
+    const pool = matching.length > 0 ? matching : inCategory;
+
+    const fresh = pool.filter((item) => !excluded.has(item.id));
+    return fresh.length > 0 ? fresh : pool;
   });
 
   if (byCategory.some((group) => group.length === 0)) {

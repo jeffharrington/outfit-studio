@@ -16,6 +16,7 @@ export interface GenerateOutfitsInput {
   occasion?: string;
   constraints?: GenerationConstraints;
   limit?: number;
+  excludeItemIds?: string[];
 }
 
 export interface GeneratedOutfitResult {
@@ -49,6 +50,7 @@ export async function generateOutfits(
     occasion: input.occasion,
     constraints: input.constraints,
     limit: input.limit,
+    excludeItemIds: input.excludeItemIds,
   });
 
   const byId = new Map(items.map((item) => [item.id, item]));

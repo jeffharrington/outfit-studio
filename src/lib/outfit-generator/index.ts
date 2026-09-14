@@ -14,6 +14,7 @@ export interface GenerateOutfitsOptions {
   occasion?: string;
   constraints?: GenerationConstraints;
   limit?: number;
+  excludeItemIds?: string[];
 }
 
 export function generateOutfits(
@@ -21,5 +22,10 @@ export function generateOutfits(
   options: GenerateOutfitsOptions = {},
 ): GeneratedOutfit[] {
   const constraints = resolveConstraints(options.occasion, options.constraints ?? {});
-  return generateCandidates(items, constraints, options.limit ?? 5);
+  return generateCandidates(
+    items,
+    constraints,
+    options.limit ?? 5,
+    options.excludeItemIds,
+  );
 }
