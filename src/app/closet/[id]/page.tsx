@@ -5,9 +5,8 @@ import { notFound } from "next/navigation";
 
 import { getClothingItem } from "@/lib/actions/items";
 import { getClothingImageUrl } from "@/lib/supabase/storage";
-import { capitalize } from "@/lib/utils";
 
-import { DeleteItemButton } from "./delete-item-button";
+import { ItemDetailsPanel } from "./item-details-panel";
 
 export default async function ClothingItemPage(
   props: PageProps<"/closet/[id]">,
@@ -45,54 +44,7 @@ export default async function ClothingItemPage(
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 rounded-lg border p-6">
-          <h1 className="font-heading text-2xl font-normal tracking-normal">
-            {item.name ?? "Untitled item"}
-          </h1>
-
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Type</dt>
-              <dd>{capitalize(item.category)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Pattern</dt>
-              <dd>{item.pattern ? capitalize(item.pattern) : "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Primary color</dt>
-              <dd>{capitalize(item.primary_color)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Secondary color</dt>
-              <dd>{item.secondary_color ? capitalize(item.secondary_color) : "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Casualness</dt>
-              <dd>{item.casualness}/10</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Trendiness</dt>
-              <dd>{item.trendiness}/10</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Boldness</dt>
-              <dd>{item.boldness}/10</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Warmth</dt>
-              <dd>{item.warmth}/10</dd>
-            </div>
-          </dl>
-
-          <p className="text-sm text-muted-foreground">
-            Editing attributes is coming in a follow-up feature pass.
-          </p>
-
-          <div className="border-t pt-6">
-            <DeleteItemButton id={item.id} />
-          </div>
-        </div>
+        <ItemDetailsPanel item={item} />
       </div>
     </main>
   );
