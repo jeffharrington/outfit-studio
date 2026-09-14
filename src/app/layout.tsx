@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Archivo, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <NavBar />
         <div className="flex flex-1 flex-col">{children}</div>
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
