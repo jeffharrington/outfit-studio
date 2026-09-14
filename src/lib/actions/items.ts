@@ -59,6 +59,7 @@ export async function listClothingItems(
   let query = supabase
     .from("clothing_items")
     .select("*", { count: "exact" })
+    .order("category", { ascending: true })
     .order("created_at", { ascending: false })
     .range(from, to);
 
