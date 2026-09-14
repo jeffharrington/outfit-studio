@@ -29,10 +29,10 @@ export default async function ClothingItemPage(
       </div>
 
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-2xl font-bold tracking-tight">
           {item.name ?? "Untitled item"}
         </h1>
-        <Badge variant="secondary">{item.category}</Badge>
+        <Badge variant="accent">{item.category}</Badge>
       </div>
 
       <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-4">

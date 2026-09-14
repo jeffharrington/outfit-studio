@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Outfit Studio</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Outfit Studio</h1>
         <p className="mt-1 text-muted-foreground">
           A visual database of your closet, and a tool to generate outfits from it.
         </p>
@@ -32,7 +32,7 @@ export default function Home() {
       <div className="grid gap-4 sm:grid-cols-3">
         {SECTIONS.map((section) => (
           <Link key={section.href} href={section.href}>
-            <Card className="h-full transition-colors hover:bg-accent">
+            <Card className="h-full transition-colors hover:ring-accent">
               <CardHeader>
                 <CardTitle>{section.title}</CardTitle>
                 <CardDescription>{section.description}</CardDescription>

@@ -11,7 +11,7 @@ export function ItemCard({ item }: { item: ClothingItem }) {
   return (
     <Link
       href={`/closet/${item.id}`}
-      className="flex flex-col gap-2 rounded-lg border p-3 transition-colors hover:bg-accent"
+      className="flex flex-col gap-2 rounded-lg border p-3 transition-colors hover:border-accent"
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
         <Image
@@ -26,7 +26,7 @@ export function ItemCard({ item }: { item: ClothingItem }) {
         <span className="truncate text-sm font-medium">
           {item.name ?? "Untitled item"}
         </span>
-        <Badge variant="secondary">{item.category}</Badge>
+        <Badge variant="accent">{item.category}</Badge>
       </div>
     </Link>
   );

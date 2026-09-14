@@ -11,7 +11,7 @@ export default async function OutfitPage(props: PageProps<"/outfits/[id]">) {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">
+      <h1 className="text-2xl font-bold tracking-tight">
         {outfit.name ?? "Untitled outfit"}
       </h1>
       <ul className="grid gap-3 sm:grid-cols-3">
@@ -21,7 +21,7 @@ export default async function OutfitPage(props: PageProps<"/outfits/[id]">) {
             className="flex items-center justify-between rounded-lg border p-4"
           >
             <span>{item.name ?? "Untitled item"}</span>
-            <Badge variant="secondary">{item.category}</Badge>
+            <Badge variant="accent">{item.category}</Badge>
           </li>
         ))}
       </ul>

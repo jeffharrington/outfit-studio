@@ -55,7 +55,7 @@ export default async function ClosetPage(props: PageProps<"/closet">) {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Closet</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Closet</h1>
           <p className="text-muted-foreground">
             {total} item{total === 1 ? "" : "s"}
           </p>
