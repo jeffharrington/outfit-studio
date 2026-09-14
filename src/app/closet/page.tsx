@@ -1,3 +1,4 @@
+import { Upload } from "lucide-react";
 import Link from "next/link";
 
 import { listClothingItems } from "@/lib/actions/items";
@@ -6,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { ItemCard } from "@/components/item-card";
 import { PaginationControls } from "@/components/pagination-controls";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 const FILTERS: { label: string; category: ClothingCategory | undefined }[] = [
   { label: "All", category: undefined },
-  { label: "Top", category: "top" },
-  { label: "Bottom", category: "bottom" },
+  { label: "Tops", category: "top" },
+  { label: "Bottoms", category: "bottom" },
   { label: "Shoes", category: "shoes" },
 ];
 
@@ -52,15 +53,24 @@ export default async function ClosetPage(props: PageProps<"/closet">) {
   const page = Math.min(requestedPage, totalPages);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-12">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Closet</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-heading text-2xl font-normal tracking-normal">Closet</h1>
+          <p className="text-base text-muted-foreground">
             {total} item{total === 1 ? "" : "s"}
           </p>
         </div>
-        <Button render={<Link href="/closet/upload">Add item</Link>} />
+        <Button
+          variant="accent"
+          size="lg"
+          render={
+            <Link href="/closet/upload">
+              <Upload />
+              Add item
+            </Link>
+          }
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -91,7 +101,7 @@ export default async function ClosetPage(props: PageProps<"/closet">) {
         </p>
       ) : (
         <>
-          <ul className="grid grid-cols-2 gap-3">
+          <ul className="grid grid-cols-3 gap-4">
             {items.map((item) => (
               <li key={item.id}>
                 <ItemCard item={item} backHref={buildHref(category, page)} />
