@@ -1,4 +1,4 @@
-const STORAGE_BUCKET = "clothing-photos";
+export const STORAGE_BUCKET = "clothing-photos";
 
 /** Builds a public URL for an object in the clothing-photos bucket. */
 export function getClothingImageUrl(path: string): string {

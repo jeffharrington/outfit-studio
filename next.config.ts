@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // Default is 1MB; raw phone photos routinely exceed that before
+      // the upload pipeline gets a chance to compress/convert them.
+      bodySizeLimit: "15mb",
+    },
+  },
   images: {
     remotePatterns: [
       // Hosted Supabase Storage (production/preview).
