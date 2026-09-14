@@ -94,7 +94,7 @@ export default async function ClosetPage(props: PageProps<"/closet">) {
           <ul className="grid grid-cols-2 gap-3">
             {items.map((item) => (
               <li key={item.id}>
-                <ItemCard item={item} />
+                <ItemCard item={item} backHref={buildHref(category, page)} />
               </li>
             ))}
           </ul>
