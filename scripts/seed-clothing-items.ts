@@ -17,6 +17,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { analyzeClothingImage } from "@/lib/anthropic";
+import { generateIdealizedClothingImage } from "@/lib/image-generation/openai";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const execFileAsync = promisify(execFile);
@@ -25,12 +26,14 @@ const REPO_ROOT = path.resolve(import.meta.dirname, "..");
 const SOURCE_DIR = path.join(REPO_ROOT, "seed-images");
 const CACHE_DIR = path.join(REPO_ROOT, "scripts", ".seed-cache");
 const ANALYSIS_CACHE_DIR = path.join(CACHE_DIR, "analysis");
+const IDEALIZED_CACHE_DIR = path.join(CACHE_DIR, "idealized");
 const MANIFEST_PATH = path.join(CACHE_DIR, "manifest.json");
 const STORAGE_BUCKET = "clothing-photos";
 
 interface ManifestEntry {
   clothingItemId: string;
   imagePath: string;
+  displayImagePath: string | null;
 }
 type Manifest = Record<string, ManifestEntry>;
 
@@ -94,6 +97,21 @@ async function getOrAnalyze(
   return analysis;
 }
 
+async function getOrIdealize(baseName: string, jpegBuffer: Buffer): Promise<Buffer> {
+  const cachePath = path.join(IDEALIZED_CACHE_DIR, `${baseName}.png`);
+  try {
+    return await readFile(cachePath);
+  } catch {
+    // Not cached yet — fall through to a real OpenAI image-edit call.
+  }
+
+  const idealized = await generateIdealizedClothingImage(jpegBuffer, "image/jpeg");
+
+  await mkdir(IDEALIZED_CACHE_DIR, { recursive: true });
+  await writeFile(cachePath, idealized);
+  return idealized;
+}
+
 async function convertToJpeg(sourcePath: string, baseName: string): Promise<string> {
   const outputPath = path.join(await mkdtempJpegDir(), `${baseName}.jpg`);
   // -Z caps the max dimension (keeps Storage/API payloads reasonable);
@@ -145,6 +163,7 @@ async function main() {
   }
 
   const failures: { file: string; error: string }[] = [];
+  const missingIdealized: string[] = [];
   let succeeded = 0;
 
   for (const [index, file] of files.entries()) {
@@ -169,6 +188,24 @@ async function main() {
         .upload(storagePath, jpegBuffer, { contentType: "image/jpeg" });
       if (uploadError) throw uploadError;
 
+      let displayStoragePath: string | null = null;
+      try {
+        const idealized = await getOrIdealize(baseName, jpegBuffer);
+        displayStoragePath = `items-display/${crypto.randomUUID()}.png`;
+        const { error: displayUploadError } = await admin.storage
+          .from(STORAGE_BUCKET)
+          .upload(displayStoragePath, idealized, { contentType: "image/png" });
+        if (displayUploadError) throw displayUploadError;
+      } catch (idealizeError) {
+        // Non-fatal: fall back to the original photo rather than failing
+        // the whole item over an idealization failure.
+        const message =
+          idealizeError instanceof Error ? idealizeError.message : String(idealizeError);
+        console.error(`${label} -> idealized image failed, using original: ${message}`);
+        displayStoragePath = null;
+        missingIdealized.push(file);
+      }
+
       const { data: item, error: insertError } = await admin
         .from("clothing_items")
         .insert({
@@ -182,6 +219,7 @@ async function main() {
           boldness: analysis.boldness,
           warmth: analysis.warmth,
           image_path: storagePath,
+          display_image_path: displayStoragePath,
           source: "seed",
           ai_raw_response: JSON.parse(
             JSON.stringify(analysis.rawResponse),
@@ -191,11 +229,15 @@ async function main() {
         .single();
       if (insertError) throw insertError;
 
-      manifest[file] = { clothingItemId: item.id, imagePath: storagePath };
+      manifest[file] = {
+        clothingItemId: item.id,
+        imagePath: storagePath,
+        displayImagePath: displayStoragePath,
+      };
       await writeManifest(manifest);
 
       console.log(
-        `${label} -> ${analysis.category}, casualness ${analysis.casualness}, warmth ${analysis.warmth}`,
+        `${label} -> ${analysis.category}, casualness ${analysis.casualness}, warmth ${analysis.warmth}${displayStoragePath ? "" : " (no idealized image)"}`,
       );
       succeeded++;
     } catch (error) {
@@ -214,6 +256,14 @@ async function main() {
       console.log(`  - ${failure.file}: ${failure.error}`);
     }
     process.exitCode = 1;
+  }
+  if (missingIdealized.length > 0) {
+    console.log(
+      `${missingIdealized.length} item(s) imported with the original photo only (idealized image generation failed): ${missingIdealized.join(", ")}`,
+    );
+    console.log(
+      "These are already in the manifest, so re-running this script won't retry them — delete their manifest entry in scripts/.seed-cache/manifest.json to retry idealization.",
+    );
   }
 }
 

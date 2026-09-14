@@ -28,6 +28,7 @@ export interface ClothingItem {
   boldness: number;
   warmth: number;
   image_path: string;
+  display_image_path: string | null;
   source: string;
   is_archived: boolean;
 }
@@ -118,6 +119,8 @@ export interface CreateClothingItemInput {
   warmth: number;
   /** Storage object path, already uploaded to the clothing-photos bucket. */
   imagePath: string;
+  /** Idealized, transparent-background version, already uploaded. */
+  displayImagePath?: string | null;
   source?: string;
   aiRawResponse?: unknown;
 }
@@ -140,6 +143,7 @@ export async function createClothingItem(
       boldness: input.boldness,
       warmth: input.warmth,
       image_path: input.imagePath,
+      display_image_path: input.displayImagePath ?? null,
       source: input.source ?? "upload",
       ai_raw_response:
         input.aiRawResponse != null ? toJson(input.aiRawResponse) : null,

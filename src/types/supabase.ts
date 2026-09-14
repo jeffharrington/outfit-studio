@@ -41,6 +41,7 @@ export type Database = {
           casualness: number
           category: Database["public"]["Enums"]["clothing_category"]
           created_at: string
+          display_image_path: string | null
           id: string
           image_path: string
           is_archived: boolean
@@ -60,6 +61,7 @@ export type Database = {
           casualness: number
           category: Database["public"]["Enums"]["clothing_category"]
           created_at?: string
+          display_image_path?: string | null
           id?: string
           image_path: string
           is_archived?: boolean
@@ -79,6 +81,7 @@ export type Database = {
           casualness?: number
           category?: Database["public"]["Enums"]["clothing_category"]
           created_at?: string
+          display_image_path?: string | null
           id?: string
           image_path?: string
           is_archived?: boolean
