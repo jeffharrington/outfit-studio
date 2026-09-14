@@ -36,16 +36,31 @@ export interface ClothingItem {
 export interface ClothingItemFilters {
   category?: ClothingCategory;
   includeArchived?: boolean;
+  /** 1-based page number. Defaults to 1. */
+  page?: number;
+  /** Defaults to 10. */
+  pageSize?: number;
+}
+
+export interface ListClothingItemsResult {
+  items: ClothingItem[];
+  total: number;
 }
 
 export async function listClothingItems(
   filters: ClothingItemFilters = {},
-): Promise<ClothingItem[]> {
+): Promise<ListClothingItemsResult> {
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 10;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   const supabase = await createClient();
   let query = supabase
     .from("clothing_items")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (filters.category) {
     query = query.eq("category", filters.category);
@@ -54,9 +69,9 @@ export async function listClothingItems(
     query = query.eq("is_archived", false);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw error;
-  return data as ClothingItem[];
+  return { items: data as ClothingItem[], total: count ?? 0 };
 }
 
 export async function getClothingItem(

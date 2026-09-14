@@ -1,11 +1,54 @@
 import Link from "next/link";
 
 import { listClothingItems } from "@/lib/actions/items";
-import { Badge } from "@/components/ui/badge";
+import { CLOTHING_CATEGORIES, type ClothingCategory } from "@/lib/outfit-generator/types";
 import { Button } from "@/components/ui/button";
+import { ItemCard } from "@/components/item-card";
 
-export default async function ClosetPage() {
-  const items = await listClothingItems();
+const PAGE_SIZE = 10;
+
+const FILTERS: { label: string; category: ClothingCategory | undefined }[] = [
+  { label: "All", category: undefined },
+  { label: "Top", category: "top" },
+  { label: "Bottom", category: "bottom" },
+  { label: "Shoes", category: "shoes" },
+];
+
+function isClothingCategory(value: string): value is ClothingCategory {
+  return (CLOTHING_CATEGORIES as readonly string[]).includes(value);
+}
+
+function buildHref(category: ClothingCategory | undefined, page: number): string {
+  const params = new URLSearchParams();
+  if (category) params.set("category", category);
+  if (page > 1) params.set("page", String(page));
+  const query = params.toString();
+  return query ? `/closet?${query}` : "/closet";
+}
+
+export default async function ClosetPage(props: PageProps<"/closet">) {
+  const searchParams = await props.searchParams;
+
+  const categoryParam = searchParams.category;
+  const category =
+    typeof categoryParam === "string" && isClothingCategory(categoryParam)
+      ? categoryParam
+      : undefined;
+
+  const pageParam = searchParams.page;
+  const requestedPage =
+    typeof pageParam === "string" && Number.isFinite(Number(pageParam))
+      ? Math.max(1, Math.floor(Number(pageParam)))
+      : 1;
+
+  const { items, total } = await listClothingItems({
+    category,
+    page: requestedPage,
+    pageSize: PAGE_SIZE,
+  });
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
@@ -13,30 +56,67 @@ export default async function ClosetPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Closet</h1>
           <p className="text-muted-foreground">
-            {items.length} item{items.length === 1 ? "" : "s"}
+            {total} item{total === 1 ? "" : "s"}
           </p>
         </div>
-        <Button render={<Link href="/closet/upload">Upload a piece</Link>} />
+        <Button render={<Link href="/closet/upload">Add item</Link>} />
+      </div>
+
+      <div className="flex gap-2">
+        {FILTERS.map((filter) => (
+          <Button
+            key={filter.label}
+            variant={filter.category === category ? "default" : "outline"}
+            size="sm"
+            render={<Link href={buildHref(filter.category, 1)}>{filter.label}</Link>}
+          />
+        ))}
       </div>
 
       {items.length === 0 ? (
         <p className="text-muted-foreground">
-          Nothing here yet — upload a photo to get started.
+          {category
+            ? `No ${category} items yet.`
+            : "Nothing here yet — upload a photo to get started."}
         </p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {items.map((item) => (
-            <li key={item.id}>
-              <Link
-                href={`/closet/${item.id}`}
-                className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
-              >
-                <span>{item.name ?? "Untitled item"}</span>
-                <Badge variant="secondary">{item.category}</Badge>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="grid grid-cols-2 gap-3">
+            {items.map((item) => (
+              <li key={item.id}>
+                <ItemCard item={item} />
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex items-center justify-between">
+            {page > 1 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link href={buildHref(category, page - 1)}>Previous</Link>}
+              />
+            ) : (
+              <Button variant="outline" size="sm" disabled>
+                Previous
+              </Button>
+            )}
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            {page < totalPages ? (
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link href={buildHref(category, page + 1)}>Next</Link>}
+              />
+            ) : (
+              <Button variant="outline" size="sm" disabled>
+                Next
+              </Button>
+            )}
+          </div>
+        </>
       )}
     </main>
   );
